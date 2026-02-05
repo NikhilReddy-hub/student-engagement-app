@@ -12,6 +12,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Variants } from "framer-motion";
+
 import {
     ArrowLeft,
     Send,
@@ -48,12 +50,12 @@ const containerVariants = {
     },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
         y: 0,
         opacity: 1,
-        transition: { type: 'spring', stiffness: 300, damping: 24 },
+        transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
     },
 };
 

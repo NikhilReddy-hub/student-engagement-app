@@ -52,7 +52,7 @@ export default function Input({
           `}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
-                    {...props}
+                    {...(props as any)}
                 />
             </div>
 

@@ -10,7 +10,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import {
     Projector,
     CheckSquare,
@@ -65,21 +65,21 @@ const containerVariants = {
     },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
         y: 0,
         opacity: 1,
-        transition: { type: 'spring', stiffness: 300, damping: 24 },
+        transition: { type: 'spring', stiffness: 300, damping: 24 } as any,
     },
 };
 
-const cardVariants = {
+const cardVariants: Variants = {
     hidden: { scale: 0.95, opacity: 0 },
     visible: {
         scale: 1,
         opacity: 1,
-        transition: { type: 'spring', stiffness: 300, damping: 24 },
+        transition: { type: 'spring', stiffness: 300, damping: 24 } as any,
     },
 };
 

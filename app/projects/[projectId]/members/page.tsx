@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect, use } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, easeOut } from 'framer-motion';
 import {
     ArrowLeft,
     Trash2,
@@ -42,14 +42,14 @@ const rowVariants = {
     visible: (i: number) => ({
         opacity: 1,
         y: 0,
-        transition: { delay: i * 0.1, duration: 0.4, ease: "easeOut" }
+        transition: { delay: i * 0.1, duration: 0.4, ease: easeOut }
     }),
     exit: { opacity: 0, x: -20, transition: { duration: 0.3 } }
 };
 
 const modalVariants = {
     hidden: { scale: 0.9, opacity: 0 },
-    visible: { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 25 } },
+    visible: { scale: 1, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 25 } as any },
     exit: { scale: 0.9, opacity: 0, transition: { duration: 0.2 } }
 };
 

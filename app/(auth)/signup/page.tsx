@@ -11,6 +11,8 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Variants } from "framer-motion"
+
 import {
     CheckCircle2,
     Loader2,
@@ -112,7 +114,7 @@ export default function SignupPage() {
         }
     };
 
-    const fadeInUp = {
+    const fadeInUp:Variants = {
         initial: { y: 20, opacity: 0 },
         animate: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } }
     };
