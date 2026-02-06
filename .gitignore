@@ -58,3 +58,22 @@ health-check.js
 *_error.txt
 *-results.txt
 generate_log.txt
+
+# test and debug scripts
+/scripts/check-mentors.js
+/scripts/get-mentor-id.js
+/scripts/get_test_token.js
+/scripts/get_test_token.ts
+/scripts/repro_project_create.ts
+/scripts/test_prisma_init.ts
+test-prisma.ts
+
+# vanilla/prototype folders (not part of main app)
+/mentor-project-vanilla/
+
+# duplicate config files
+next.config.js
+
+# generated Prisma client (should be regenerated)
+/generated/
+

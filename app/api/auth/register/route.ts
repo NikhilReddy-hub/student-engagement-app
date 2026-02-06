@@ -111,10 +111,35 @@ export async function POST(request: NextRequest) {
         return response;
     } catch (error) {
         console.error("Registration error:", error);
+
+        // Log detailed error information for debugging
+        if (error instanceof Error) {
+            console.error("Error name:", error.name);
+            console.error("Error message:", error.message);
+            console.error("Error stack:", error.stack);
+        }
+
+        // Check for database connection errors
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes("Can't reach database") ||
+            errorMessage.includes("Connection") ||
+            errorMessage.includes("ECONNREFUSED")) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Database connection failed. Please check your DATABASE_URL configuration.",
+                },
+                { status: 500 }
+            );
+        }
+
         return NextResponse.json(
             {
                 success: false,
                 error: "An error occurred during registration",
+                ...(process.env.NODE_ENV === "development" && {
+                    details: errorMessage
+                })
             },
             { status: 500 }
         );
