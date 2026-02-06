@@ -3,13 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// Models
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid())
   name      String
   email     String   @unique
   password  String
@@ -17,88 +16,76 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
-  projectsOwned    Project[]         @relation("ProjectOwner")
+  projectsOwned    Project[]      @relation("ProjectOwner")
   projectsJoined   ProjectMember[]
   tasksAssigned    Task[]
-  feedbackGiven    PeerFeedback[]    @relation("FeedbackFrom")
-  feedbackReceived PeerFeedback[]    @relation("FeedbackTo")
+  feedbackGiven    PeerFeedback[] @relation("FeedbackFrom")
+  feedbackReceived PeerFeedback[] @relation("FeedbackTo")
   logs             EngagementLog[]
 }
 
 model Project {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid())
   title     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Foreign Key to Mentor
-  mentorId String @db.ObjectId
-  mentor   User   @relation("ProjectOwner", fields: [mentorId], references: [id])
+  mentorId String
+  mentor   User @relation("ProjectOwner", fields: [mentorId], references: [id])
 
-  // Relations
   members   ProjectMember[]
   tasks     Task[]
   feedbacks PeerFeedback[]
 }
 
 model ProjectMember {
-  id       String   @id @default(auto()) @map("_id") @db.ObjectId
-  joinedAt DateTime @default(now())
+  id        String   @id @default(uuid())
+  joinedAt  DateTime @default(now())
 
-  // Foreign Keys
-  userId    String @db.ObjectId
-  projectId String @db.ObjectId
+  userId    String
+  projectId String
 
-  // Relations
   user    User    @relation(fields: [userId], references: [id])
   project Project @relation(fields: [projectId], references: [id])
 
-  // Unique constraint
   @@unique([userId, projectId])
 }
 
 model Task {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  id           String   @id @default(uuid())
   title        String
   status       String   @default("TODO")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // Foreign Keys
-  projectId    String      @db.ObjectId
-  assignedToId String?     @db.ObjectId
+  projectId    String
+  assignedToId String?
 
-  // Relations
   project  Project @relation(fields: [projectId], references: [id])
   assignee User?   @relation(fields: [assignedToId], references: [id])
 }
 
 model PeerFeedback {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  id         String   @id @default(uuid())
   rating     Int
   comment    String
   createdAt  DateTime @default(now())
 
-  // Foreign Keys
-  projectId  String @db.ObjectId
-  fromUserId String @db.ObjectId
-  toUserId   String @db.ObjectId
+  projectId  String
+  fromUserId String
+  toUserId   String
 
-  // Relations
   project  Project @relation(fields: [projectId], references: [id])
-  fromUser User    @relation("FeedbackFrom", fields: [fromUserId], references: [id])
-  toUser   User    @relation("FeedbackTo", fields: [toUserId], references: [id])
+  fromUser User @relation("FeedbackFrom", fields: [fromUserId], references: [id])
+  toUser   User @relation("FeedbackTo", fields: [toUserId], references: [id])
 }
 
 model EngagementLog {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  id         String   @id @default(uuid())
   actionType String
   details    String?
   createdAt  DateTime @default(now())
 
-  // Foreign Key
-  userId String @db.ObjectId
-  // Relations
-  user User @relation(fields: [userId], references: [id])
+  userId String
+  user   User @relation(fields: [userId], references: [id])
 }
