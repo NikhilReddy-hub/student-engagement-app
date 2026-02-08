@@ -80,56 +80,86 @@ export default function MentorProjectPage({ params }: PageProps) {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Mock API Fetching
+    // Fetch real project data from API
     useEffect(() => {
         const fetchDetails = async () => {
             try {
                 setIsLoading(true);
                 setError(null);
 
-                // Simulate network latency
-                await new Promise(r => setTimeout(r, 1200));
+                // Get user from localStorage for auth headers
+                const userStr = localStorage.getItem('user');
+                if (!userStr) {
+                    setError('Not authenticated');
+                    setIsLoading(false);
+                    return;
+                }
 
-                const mockData: Record<string, ProjectDetails> = {
-                    'p1': {
-                        projectId: 'p1',
-                        projectName: 'Web Engagement App',
-                        description: 'This project aims to create a highly interactive and responsive application for student engagement, utilizing modern web technologies and real-time data visualization.',
-                        createdAt: 'Jan 15, 2026',
-                        deadline: 'June 30, 2026',
-                        status: 'active',
-                        totalTasks: 45,
-                        completedTasks: 32,
-                        pendingTasks: 13,
-                        progressPercentage: 71,
-                        members: [
-                            { name: 'Sarah Connor', role: 'Lead Developer', email: 'sarah@example.com' },
-                            { name: 'John Doe', role: 'UI/UX Designer', email: 'john@example.com' },
-                            { name: 'Alice Smith', role: 'Frontend Engineer', email: 'alice@example.com' },
-                            { name: 'James Wilson', role: 'Backend Dev', email: 'james@example.com' }
-                        ]
-                    },
-                    'p2': {
-                        projectId: 'p2',
-                        projectName: 'AI Study Assistant',
-                        description: 'Developing a localized LLM-based assistant specifically tuned for curriculum support and student Q&A.',
-                        createdAt: 'Jan 20, 2026',
-                        deadline: 'Aug 15, 2026',
-                        status: 'active',
-                        totalTasks: 28,
-                        completedTasks: 10,
-                        pendingTasks: 18,
-                        progressPercentage: 35,
-                        members: [
-                            { name: 'Alan Turing', role: 'AI Lead', email: 'alan@example.com' },
-                            { name: 'Ada Lovelace', role: 'Python Developer', email: 'ada@example.com' }
-                        ]
-                    }
+                const user = JSON.parse(userStr);
+                const headers = {
+                    'x-user-id': user.id,
+                    'x-user-role': user.role,
                 };
 
-                const foundProject = mockData[projectId] || mockData['p1'];
-                setProject(foundProject);
+                // Fetch project data
+                const projectRes = await fetch('/api/projects', { headers });
+                if (!projectRes.ok) {
+                    throw new Error('Failed to fetch projects');
+                }
+
+                const projects = await projectRes.json();
+                const currentProject = projects.find((p: any) => p.id === projectId);
+
+                if (!currentProject) {
+                    setError('Project not found');
+                    setIsLoading(false);
+                    return;
+                }
+
+                // Fetch tasks for this project
+                const tasksRes = await fetch('/api/tasks', { headers });
+                const tasks = tasksRes.ok ? await tasksRes.json() : [];
+                const projectTasks = tasks.filter((t: any) => t.projectId === projectId);
+
+                // Fetch project members
+                const membersRes = await fetch(`/api/projects/${projectId}/members`, { headers });
+                const membersData = membersRes.ok ? await membersRes.json() : { members: [] };
+                const projectMembers = membersData.members || [];
+
+                // Transform members to match component interface
+                // Filter to only show students (exclude mentor)
+                const transformedMembers: Member[] = projectMembers
+                    .filter((m: any) => m.role === 'STUDENT')
+                    .map((m: any) => ({
+                        name: m.name || 'Unknown',
+                        role: 'Student',
+                        email: m.email || 'No email'
+                    }));
+
+                // Calculate task statistics
+                const totalTasks = projectTasks.length;
+                const completedTasks = projectTasks.filter((t: any) => t.status === 'DONE').length;
+                const pendingTasks = totalTasks - completedTasks;
+                const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+                // Transform to match component interface
+                const projectDetails: ProjectDetails = {
+                    projectId: currentProject.id,
+                    projectName: currentProject.title,
+                    description: `Project created on ${new Date(currentProject.createdAt).toLocaleDateString()}`,
+                    createdAt: new Date(currentProject.createdAt).toLocaleDateString(),
+                    deadline: 'Not set', // API doesn't provide deadline
+                    status: 'active',
+                    totalTasks,
+                    completedTasks,
+                    pendingTasks,
+                    progressPercentage,
+                    members: transformedMembers
+                };
+
+                setProject(projectDetails);
             } catch (err: any) {
+                console.error('Project detail fetch error:', err);
                 setError(err.message || "Failed to load project details.");
             } finally {
                 setIsLoading(false);
@@ -244,12 +274,16 @@ export default function MentorProjectPage({ params }: PageProps) {
                 </motion.section>
 
                 {/* Members List Section */}
-                <motion.section variants={itemVariants} className="mentorCard" style={{ gridColumn: 'span 2' }}>
+                <motion.section variants={itemVariants} className="mentorCard" id="team-members-section" style={{ gridColumn: 'span 2' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                         <h2 className="cardTitle" style={{ margin: 0 }}>Team Members</h2>
-                        <button className="btnGhost actionBtn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>
-                            <Users size={14} /> Manage Team
-                        </button>
+                        <a
+                            href={`/projects/${projectId}/add-members`}
+                            className="btnGhost actionBtn"
+                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', textDecoration: 'none' }}
+                        >
+                            <Users size={14} /> Add Members
+                        </a>
                     </div>
                     <div className="tableWrapper">
                         <table className="membersTable">
@@ -291,12 +325,24 @@ export default function MentorProjectPage({ params }: PageProps) {
                     ← Back to Dashboard
                 </a>
                 <div className="primaryButtonGroup">
-                    <button className="btnGhost actionBtn">
+                    <button
+                        className="btnGhost actionBtn"
+                        onClick={() => {
+                            const teamSection = document.querySelector('.mentorCard');
+                            if (teamSection) {
+                                teamSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        }}
+                    >
                         <Users size={18} /> View Student List
                     </button>
-                    <button className="btnSolid actionBtn">
+                    <a
+                        href={`/projects/${projectId}/assign-task`}
+                        className="btnSolid actionBtn"
+                        style={{ textDecoration: 'none' }}
+                    >
                         <Plus size={18} /> Assign New Task
-                    </button>
+                    </a>
                 </div>
             </motion.footer>
         </motion.div>

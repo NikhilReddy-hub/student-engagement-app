@@ -9,7 +9,7 @@
  */
 
 import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Variants } from "framer-motion"
 
@@ -38,7 +38,7 @@ interface FormData {
 }
 
 export default function SignupPage() {
-    const router = useRouter();
+    const { register } = useAuth();
 
     const [formData, setFormData] = useState<FormData>({
         name: '',
@@ -65,42 +65,10 @@ export default function SignupPage() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Registration failed. Try again.');
-            }
-
-            // --- AUTO-LOGIN LOGIC ---
-            // Store session in localStorage for immediate access
-            if (data.token && data.user) {
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('userId', data.user.id);
-                localStorage.setItem('userRole', data.user.role);
-            }
-
+            await register(formData.name, formData.email, formData.password, formData.role);
             setSuccess(true);
-
-            // --- ROLE-BASED REDIRECTION ---
-            setTimeout(() => {
-                if (data.user.role === 'MENTOR') {
-                    // Redirect Mentors to the new Premium Vanilla Hub
-                    window.location.href = '/mentor-hub-vanilla/dashboard.html';
-                } else {
-                    // Redirect Students to the standard Next.js Dashboard
-                    router.push('/dashboard/student');
-                }
-            }, 2000);
-
         } catch (err: any) {
             setError(err.message);
-        } finally {
             setIsLoading(false);
         }
     };
@@ -114,7 +82,7 @@ export default function SignupPage() {
         }
     };
 
-    const fadeInUp:Variants = {
+    const fadeInUp: Variants = {
         initial: { y: 20, opacity: 0 },
         animate: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" } }
     };

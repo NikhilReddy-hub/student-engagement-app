@@ -18,6 +18,7 @@ export default function CreateProjectPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
+
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
@@ -40,14 +41,17 @@ export default function CreateProjectPage() {
                 throw new Error(data.error || 'Failed to create project');
             }
 
+
             const project = await res.json();
-            router.push(`/projects/${project.id}`);
+            // Redirect back to mentor dashboard and force reload to show new project
+            window.location.href = '/dashboard/mentor';
         } catch (err: any) {
             setError(err.message);
         } finally {
             setIsLoading(false);
         }
     };
+
 
     return (
         <ProtectedRoute allowedRoles={['MENTOR']}>

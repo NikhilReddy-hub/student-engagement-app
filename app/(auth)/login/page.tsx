@@ -9,7 +9,7 @@
  */
 
 import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Variants } from "framer-motion"
 
@@ -26,7 +26,7 @@ import Link from 'next/link';
 import styles from './login.module.css';
 
 export default function LoginPage() {
-    const router = useRouter();
+    const { login } = useAuth();
 
     // Form state
     const [email, setEmail] = useState('');
@@ -43,33 +43,7 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Invalid credentials. Please check and try again.');
-            }
-
-            // SUCCESS
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('userId', data.user.id);
-            localStorage.setItem('userRole', data.user.role);
-
-            setTimeout(() => {
-                if (data.user.role === 'MENTOR') {
-                    // Redirect Mentors to the Next.js Dashboard
-                    router.push('/dashboard/mentor');
-                } else {
-                    // Redirect Students to the standard Next.js Dashboard
-                    router.push('/dashboard/student');
-                }
-            }, 800);
-
+            await login(email, password);
         } catch (err: any) {
             setError(err.message);
             setIsLoading(false);
@@ -85,7 +59,7 @@ export default function LoginPage() {
         }
     };
 
-    const fadeInUp:Variants = {
+    const fadeInUp: Variants = {
         initial: { y: 20, opacity: 0 },
         animate: { y: 0, opacity: 1, transition: { duration: 0.5, ease: "easeOut" as const } }
     };

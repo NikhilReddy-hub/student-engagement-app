@@ -2,7 +2,7 @@
 
 /**
  * ============================================
- * STUDENT FEEDBACK LIST PAGE
+ * FEEDBACK LIST PAGE (Students & Mentors)
  * High-Fidelity, Animated SaaS Experience
  * Tech Stack: Next.js App Router, TypeScript, Framer Motion
  * ============================================
@@ -10,8 +10,10 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import {  Variants } from "framer-motion";
+import { Variants } from "framer-motion";
+import { useAuth, getAuthHeaders } from '@/contexts/AuthContext';
 
 import {
     ArrowLeft,
@@ -45,7 +47,7 @@ const containerVariants = {
     },
 };
 
-const cardVariants:Variants = {
+const cardVariants: Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
         y: 0,
@@ -56,71 +58,60 @@ const cardVariants:Variants = {
 
 // --- MAIN COMPONENT ---
 
-export default function FeedbackListPage() {
-    // State management
+export default function FeedbackPage() {
+    const router = useRouter();
+    const { user } = useAuth();
     const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     /**
-     * Data Fetching Logic (Mocked)
-     * Fetches all feedback for the student on mount
+     * Data Fetching Logic (Real API)
+     * Fetches all feedback for the student/mentor from backend
      */
     useEffect(() => {
         const fetchAllFeedback = async () => {
+            if (!user) {
+                setError('Not authenticated');
+                setIsLoading(false);
+                return;
+            }
+
             try {
                 setIsLoading(true);
                 setError(null);
 
-                // JWT token from localStorage for future API integration
-                const token = localStorage.getItem('token');
+                const headers = getAuthHeaders(user);
 
-                // Simulating API Latency
-                await new Promise((resolve) => setTimeout(resolve, 1200));
+                // Fetch feedback from API
+                const res = await fetch('/api/feedback', { headers });
 
-                // Mock Database Retrieval
-                const mockData: Feedback[] = [
-                    {
-                        id: 'f1',
-                        mentorName: 'Sarah Connor',
-                        projectName: 'Web Engagement App',
-                        comment: 'Great job on the initial layout! The attention to responsiveness and the clean aesthetic is really impressive. Keep pushing on the accessibility details.',
-                        date: '2026-01-18'
-                    },
-                    {
-                        id: 'f2',
-                        mentorName: 'James Bond',
-                        projectName: 'Web Engagement App',
-                        comment: 'The JWT implementation looks solid, but make sure you are also handling token refresh logic on the client side to avoid unexpected logouts.',
-                        date: '2026-01-19'
-                    },
-                    {
-                        id: 'f3',
-                        mentorName: 'Alan Turing',
-                        projectName: 'AI Study Assistant',
-                        comment: 'The state management logic using React hooks is very efficient. I recommend exploring React Query if you plan to scale the data fetching.',
-                        date: '2026-01-20'
-                    },
-                    {
-                        id: 'f4',
-                        mentorName: 'Grace Hopper',
-                        projectName: 'Campus Maps',
-                        comment: 'The pathfinding algorithm optimization you implemented significantly improved the performance on mobile devices. Excellent work!',
-                        date: '2025-12-15'
-                    }
-                ];
+                if (!res.ok) {
+                    throw new Error('Failed to fetch feedback');
+                }
 
-                setFeedbacks(mockData);
+                const feedbackData = await res.json();
+
+                // Transform API data to match component interface
+                const transformedFeedback: Feedback[] = feedbackData.map((f: any) => ({
+                    id: f.id,
+                    mentorName: 'Peer', // We'd need to fetch user names separately
+                    projectName: 'Project', // We'd need to fetch project names separately
+                    comment: f.comment || 'No comment provided',
+                    date: new Date(f.createdAt).toLocaleDateString()
+                }));
+
+                setFeedbacks(transformedFeedback);
 
             } catch (err: any) {
-                setError('Failed to fetch feedback. Please try again later.');
+                setError(err.message || 'Failed to fetch feedback. Please try again later.');
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchAllFeedback();
-    }, []);
+    }, [user]);
 
     // --- RENDERING HELPERS ---
 
@@ -158,10 +149,15 @@ export default function FeedbackListPage() {
         >
             {/* Header Section */}
             <motion.header variants={cardVariants} className="header">
-                <Link href="/dashboard/student" className="backBtn">
+                <Link
+                    href={user?.role === 'MENTOR' ? '/dashboard/mentor' : '/dashboard/student'}
+                    className="backBtn"
+                >
                     <ArrowLeft size={18} /> Back to Dashboard
                 </Link>
-                <h1 className="title">Your Feedback</h1>
+                <h1 className="title">
+                    {user?.role === 'MENTOR' ? 'Team Feedback' : 'Your Feedback'}
+                </h1>
             </motion.header>
 
             {/* Feedback List Section */}

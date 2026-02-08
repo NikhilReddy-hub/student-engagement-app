@@ -85,59 +85,56 @@ export default function TaskDetailsPage({ params }: PageProps) {
             try {
                 setIsLoading(true);
                 setError(null);
-                await new Promise((resolve) => setTimeout(resolve, 800));
 
-                const mockDatabase: Record<string, TaskDetails> = {
-                    t1: {
-                        id: 't1',
-                        projectId: 'p1',
-                        projectName: 'Web Engagement App',
-                        title: 'User Research & Persona building',
-                        description: 'Conduct deep-dive interviews with at least 5 students and 2 mentors to understand their daily challenges with engagement tracking. Create 3 distinct user personas based on the findings.',
-                        dueDate: '2026-02-01',
-                        priority: 'High',
-                        status: 'Done',
-                        mentorName: 'Sarah Connor',
-                        comments: [
-                            { id: 'c1', author: 'Sarah Connor', text: 'Please ensure you cover both undergraduate and postgraduate students.', date: '2026-01-15 10:30' },
-                            { id: 'c2', author: 'Jane Smith (You)', text: 'I have scheduled the first three interviews for this Wednesday.', date: '2026-01-16 14:20' }
-                        ]
-                    },
-                    t2: {
-                        id: 't2',
-                        projectId: 'p1',
-                        projectName: 'Web Engagement App',
-                        title: 'Initial Wireframes & Prototype',
-                        description: 'Develop low-fidelity wireframes for the dashboard and the project details view. The focus should be on UX flow rather than visual polish.',
-                        dueDate: '2026-02-15',
-                        priority: 'Medium',
-                        status: 'Doing',
-                        mentorName: 'Sarah Connor',
-                        comments: [
-                            { id: 'c3', author: 'Sarah Connor', text: 'Make sure the navigation between the dashboard and projects is seamless.', date: '2026-01-20 09:00' }
-                        ]
-                    },
-                    t3: {
-                        id: 't3',
-                        projectId: 'p1',
-                        projectName: 'Web Engagement App',
-                        title: 'Backend API Design',
-                        description: 'Define the RESTful API endpoints required for the application, including authentication, project CRUD, and task management.',
-                        dueDate: '2026-03-01',
-                        priority: 'High',
-                        status: 'Todo',
-                        mentorName: 'Alan Turing',
-                        comments: []
-                    }
+                // Get user from localStorage for auth headers
+                const userStr = localStorage.getItem('user');
+                if (!userStr) {
+                    setError('Not authenticated');
+                    setIsLoading(false);
+                    return;
+                }
+
+                const user = JSON.parse(userStr);
+                const headers = {
+                    'x-user-id': user.id,
+                    'x-user-role': user.role,
                 };
 
-                const foundTask = mockDatabase[taskId];
-                if (foundTask) {
-                    setTask(foundTask);
-                } else {
-                    throw new Error('Task not found.');
+                // Fetch task details from API
+                const taskRes = await fetch(`/api/tasks/${taskId}`, { headers });
+                if (!taskRes.ok) {
+                    if (taskRes.status === 404) {
+                        throw new Error('Task not found');
+                    } else if (taskRes.status === 403) {
+                        throw new Error('You do not have permission to view this task');
+                    }
+                    throw new Error('Failed to fetch task details');
                 }
+
+                const taskData = await taskRes.json();
+
+                // Fetch project details to get project name
+                const projectRes = await fetch('/api/projects', { headers });
+                const projects = projectRes.ok ? await projectRes.json() : [];
+                const project = projects.find((p: any) => p.id === taskData.projectId);
+
+                // Transform to match component interface
+                const taskDetails: TaskDetails = {
+                    id: taskData.id,
+                    projectId: taskData.projectId,
+                    projectName: project?.title || 'Unknown Project',
+                    title: taskData.title,
+                    description: 'No description provided', // API doesn't return description yet
+                    dueDate: taskData.createdAt ? new Date(taskData.createdAt).toLocaleDateString() : 'Not set',
+                    priority: 'Medium', // API doesn't return priority yet
+                    status: taskData.status === 'TODO' ? 'Todo' : taskData.status === 'IN_PROGRESS' ? 'Doing' : 'Done',
+                    mentorName: 'Mentor', // Would need to fetch from project mentor
+                    comments: [] // Would need separate API endpoint for comments
+                };
+
+                setTask(taskDetails);
             } catch (err: any) {
+                console.error('Task fetch error:', err);
                 setError(err.message || 'Failed to load task details.');
             } finally {
                 setIsLoading(false);
@@ -151,12 +148,37 @@ export default function TaskDetailsPage({ params }: PageProps) {
         try {
             setIsUpdating(true);
             setError(null);
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+
+            // Get user from localStorage for auth headers
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                setError('Not authenticated');
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            const headers = {
+                'x-user-id': user.id,
+                'x-user-role': user.role,
+                'Content-Type': 'application/json',
+            };
+
+            // Update task status via API
+            const res = await fetch(`/api/tasks/${task.id}`, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({ status: 'DONE' }),
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to update task status');
+            }
+
             setTask({ ...task, status: 'Done' });
             setSuccessMsg('Task successfully marked as completed!');
             setTimeout(() => setSuccessMsg(null), 3500);
-        } catch (err) {
-            setError('Failed to update task status. Please try again.');
+        } catch (err: any) {
+            setError(err.message || 'Failed to update task status. Please try again.');
         } finally {
             setIsUpdating(false);
         }

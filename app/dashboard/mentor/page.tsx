@@ -10,6 +10,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import {
     Users,
@@ -64,92 +66,114 @@ const containerVariants = {
 };
 
 const itemVariants: Variants = {
-  hidden: {
-    y: 20,
-    opacity: 0,
-  },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 10,
-    } as any,
-  },
+    hidden: {
+        y: 20,
+        opacity: 0,
+    },
+    visible: {
+        y: 0,
+        opacity: 1,
+        transition: {
+            type: "spring",
+            stiffness: 100,
+            damping: 10,
+        } as any,
+    },
 };
 
 // --- MAIN COMPONENT ---
 
 export default function MentorDashboard() {
+    const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
+
     // State management
     const [projects, setProjects] = useState<Project[]>([]);
     const [activities, setActivities] = useState<Activity[]>([]);
     const [analytics, setAnalytics] = useState<Analytics | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Role-based access control
+    useEffect(() => {
+        if (!authLoading) {
+            if (!user) {
+                router.push('/login');
+            } else if (user.role !== 'MENTOR') {
+                router.push('/dashboard/student');
+            }
+        }
+    }, [user, authLoading, router]);
 
     /**
-     * Data Fetching Logic (Mocked)
-     * Simulates fetching dashboard data on load
+     * Data Fetching Logic (Real API Calls)
+     * Fetches dashboard data from backend APIs
      */
     useEffect(() => {
         const fetchDashboardData = async () => {
+            if (!user) return; // Wait for user to be loaded
+
             try {
                 setIsLoading(true);
                 setError(null);
 
-                // JWT token from localStorage (ready for real backend)
-                const token = localStorage.getItem('token');
+                // Prepare auth headers
+                const headers = {
+                    'x-user-id': user.id,
+                    'x-user-role': user.role,
+                };
 
-                // Simulating API Latency
-                await new Promise((resolve) => setTimeout(resolve, 1200));
+                // Fetch all data in parallel
+                const [projectsRes, tasksRes] = await Promise.all([
+                    fetch('/api/projects', { headers }),
+                    fetch('/api/tasks', { headers }),
+                ]);
 
-                // Mock Analytics
+                // Check for errors
+                if (!projectsRes.ok || !tasksRes.ok) {
+                    throw new Error('Failed to fetch dashboard data');
+                }
+
+                // Parse responses
+                const projectsData = await projectsRes.json();
+                const tasksData = await tasksRes.json();
+
+                // Transform projects data to match component interface
+                const transformedProjects: Project[] = projectsData.map((p: any) => ({
+                    id: p.id,
+                    name: p.title,
+                    description: `Project created on ${new Date(p.createdAt).toLocaleDateString()}`,
+                    studentCount: 0, // Would need to fetch from project members API
+                }));
+
+                // Calculate analytics from real data
+                const completedTasks = tasksData.filter((t: any) => t.status === 'DONE').length;
+                const totalTasks = tasksData.length;
+                const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
                 setAnalytics({
-                    totalProjects: 6,
-                    totalStudents: 15,
-                    activeTasks: 42,
-                    completionRate: 84
+                    totalProjects: projectsData.length,
+                    totalStudents: 0, // Would need separate API endpoint
+                    activeTasks: tasksData.filter((t: any) => t.status === 'IN_PROGRESS').length,
+                    completionRate: completionRate
                 });
 
-                // Mock Projects
-                setProjects([
-                    {
-                        id: 'p1',
-                        name: 'Web Engagement App',
-                        description: 'Building high-fidelity interactive dashboards for student tracking.',
-                        studentCount: 4
-                    },
-                    {
-                        id: 'p2',
-                        name: 'AI Study Assistant',
-                        description: 'Next-gen LLM integration for curriculum support.',
-                        studentCount: 3
-                    },
-                    {
-                        id: 'p3',
-                        name: 'Campus Maps',
-                        description: 'Indoor navigation and pathfinding optimization for university campus.',
-                        studentCount: 5
-                    },
-                    {
-                        id: 'p4',
-                        name: 'Cloud Infrastructure',
-                        description: 'Serverless deployment and monitoring for scale.',
-                        studentCount: 3
-                    }
-                ]);
+                setProjects(transformedProjects);
 
-                // Mock Recent Activity
-                setActivities([
-                    { id: 'a1', studentName: 'Jane Smith', action: 'Submitted task: Final Wireframes', date: '2 hours ago', type: 'task' },
-                    { id: 'a2', studentName: 'John Doe', action: 'Completed project: UX Research', date: '5 hours ago', type: 'project' },
-                    { id: 'a3', studentName: 'Alice Johnson', action: 'Request feedback on: Database Schema', date: '1 day ago', type: 'feedback' },
-                    { id: 'a4', studentName: 'Bob Brown', action: 'Joined project: AI Study Assistant', date: '2 days ago', type: 'project' }
-                ]);
+                // Transform recent activity from tasks
+                const recentActivity: Activity[] = tasksData.slice(0, 5).map((t: any) => ({
+                    id: t.id,
+                    studentName: 'Student', // Would need to fetch user names
+                    action: `Task: ${t.title} - ${t.status}`,
+                    date: new Date(t.updatedAt).toLocaleString(),
+                    type: 'task'
+                }));
 
-            } catch (err: any) {
+                setActivities(recentActivity);
+
+            } catch (err) {
+                console.error('Mentor dashboard fetch error:', err);
                 setError('Failed to load dashboard. Please try refreshing.');
             } finally {
                 setIsLoading(false);
@@ -157,7 +181,7 @@ export default function MentorDashboard() {
         };
 
         fetchDashboardData();
-    }, []);
+    }, [user]);
 
     // --- RENDERING HELPERS ---
 
@@ -195,24 +219,26 @@ export default function MentorDashboard() {
         >
             {/* Navbar Section */}
             <motion.nav variants={itemVariants} className="navbar">
-                <div className="logo">CollabLearn</div>
+                <div className="logo">
+                    <LayoutDashboard size={24} style={{ marginRight: '0.5rem' }} />
+                    CollabLearn
+                </div>
                 <div className="navRight">
                     <div className="searchBar" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                         <Search size={16} style={{ position: 'absolute', left: '12px', color: '#94a3b8' }} />
                         <input
                             type="text"
                             placeholder="Search projects..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             style={{ padding: '0.6rem 1rem 0.6rem 2.5rem', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '0.875rem', width: '240px' }}
                         />
                     </div>
-                    <motion.div whileHover={{ scale: 1.1 }} style={{ cursor: 'pointer', color: '#64748b' }}>
-                        <Bell size={20} />
-                    </motion.div>
-                    <Link href="/feedback" style={{ display: 'flex', alignItems: 'center', color: '#64748b', textDecoration: 'none', marginRight: '1rem', fontSize: '0.875rem' }}>
-                        <MessageSquare size={18} style={{ marginRight: '6px' }} />
-                        Feedback
+                    <Link href="/feedback" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#6366f1', color: 'white', borderRadius: '10px', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}>
+                        <MessageSquare size={18} />
+                        Team Feedback
                     </Link>
-                    <span className="welcomeText">Welcome back, Mentor!</span>
+                    <span className="welcomeText">Welcome back, {user?.name || 'Mentor'}!</span>
                     <Link href="/logout" className="logoutBtn">
                         <LogOut size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
                         Logout
@@ -253,24 +279,29 @@ export default function MentorDashboard() {
                         + New Project
                     </Link>
                     <div className="projectList">
-                        {projects.map((project) => (
-                            <motion.div
-                                key={project.id}
-                                whileHover={{ scale: 1.01 }}
-                                className="projectCard"
-                            >
-                                <div className="projectInfo">
-                                    <h3>{project.name}</h3>
-                                    <p>{project.description}</p>
-                                    <div className="studentCount">
-                                        <Users size={14} /> {project.studentCount} students assigned
+                        {projects
+                            .filter(project =>
+                                project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                project.description.toLowerCase().includes(searchQuery.toLowerCase())
+                            )
+                            .map((project) => (
+                                <motion.div
+                                    key={project.id}
+                                    whileHover={{ scale: 1.01 }}
+                                    className="projectCard"
+                                >
+                                    <div className="projectInfo">
+                                        <h3>{project.name}</h3>
+                                        <p>{project.description}</p>
+                                        <div className="studentCount">
+                                            <Users size={14} /> {project.studentCount} students assigned
+                                        </div>
                                     </div>
-                                </div>
-                                <Link href={`/projects/${project.id}`} className="viewBtn">
-                                    View Details <ExternalLink size={14} style={{ marginLeft: '6px' }} />
-                                </Link>
-                            </motion.div>
-                        ))}
+                                    <Link href={`/projects/${project.id}`} className="viewBtn">
+                                        View Details <ExternalLink size={14} style={{ marginLeft: '6px' }} />
+                                    </Link>
+                                </motion.div>
+                            ))}
                     </div>
                 </motion.section>
 

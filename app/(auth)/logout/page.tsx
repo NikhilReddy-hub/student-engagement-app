@@ -8,55 +8,27 @@
  * ============================================
  */
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { LogOut, Loader2 } from 'lucide-react';
 import styles from './logout.module.css';
 
 export default function LogoutPage() {
-    const router = useRouter();
+    const { logout } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
 
     /**
-     * Handles the logout process
-     * 1. Calls API
-     * 2. Clears storage
-     * 3. Redirects
+     * Handles the logout process using AuthContext
      */
     const handleLogout = async () => {
         setIsLoading(true);
         setError('');
 
         try {
-            // Call logout API
-            const response = await fetch('/api/auth/logout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
-
-            if (!response.ok) {
-                // Determine if it's a real error or just already logged out
-                // For user experience, we usually treat "already logged out" as success
-                if (response.status !== 401) {
-                    throw new Error('Logout failed. Please try again.');
-                }
-            }
-
-            // SUCCESS
-            // 1. Remove token
-            localStorage.removeItem('token');
-            // 2. Remove any other user data if stored
-            localStorage.removeItem('user');
-
+            await logout();
             setSuccess(true);
-
-            // 3. Redirect after short delay
-            setTimeout(() => {
-                router.push('/login');
-            }, 1000);
-
         } catch (err: any) {
             console.error('Logout Error:', err);
             setError(err.message || 'An unexpected error occurred');
@@ -65,11 +37,10 @@ export default function LogoutPage() {
     };
 
     /**
-     * Cancel logout and return to previous page or dashboard
+     * Cancel logout and return to previous page
      */
     const handleCancel = () => {
-        router.back();
-        // fallback if no history, user can manually navigate
+        window.history.back();
     };
 
     return (

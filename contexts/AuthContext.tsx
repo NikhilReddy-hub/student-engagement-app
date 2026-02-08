@@ -99,8 +99,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 throw new Error(error.error || 'Registration failed');
             }
 
-            // After successful registration, redirect to login
-            router.push('/login');
+            const data = await response.json();
+
+            // Store user data and auto-login after successful registration
+            const userData: User = {
+                id: data.user.id,
+                name: data.user.name,
+                email: data.user.email,
+                role: data.user.role,
+            };
+
+            setUser(userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+
+            // Redirect based on role
+            if (userData.role === 'MENTOR') {
+                router.push('/dashboard/mentor');
+            } else {
+                router.push('/dashboard/student');
+            }
         } catch (error) {
             console.error('Registration error:', error);
             throw error;

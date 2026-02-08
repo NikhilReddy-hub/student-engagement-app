@@ -10,6 +10,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import {
     Projector,
@@ -19,7 +21,9 @@ import {
     LayoutDashboard,
     LogOut,
     ChevronRight,
-    Clock
+    Clock,
+    Search,
+    Bell
 } from 'lucide-react';
 import './StudentDashboard.css';
 
@@ -86,57 +90,120 @@ const cardVariants: Variants = {
 // --- MAIN COMPONENT ---
 
 export default function StudentDashboard() {
+    const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
+
     // State for data
     const [projects, setProjects] = useState<Project[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
-    const [feedback, setFeedback] = useState<Feedback[]>([]);
+    const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
     const [analytics, setAnalytics] = useState<Analytics | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     // UI State
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Role-based access control
+    useEffect(() => {
+        if (!authLoading) {
+            if (!user) {
+                router.push('/login');
+            } else if (user.role !== 'STUDENT') {
+                router.push('/dashboard/mentor');
+            }
+        }
+    }, [user, authLoading, router]);
+
     /**
-     * Data Fetching Logic (Mocked)
+     * Data Fetching Logic (Real API Calls)
      */
     useEffect(() => {
         const fetchData = async () => {
+            if (!user) return; // Wait for user to be loaded
+
             try {
                 setIsLoading(true);
-                const token = localStorage.getItem('token');
+                setError(null);
 
-                // Simulating API Latency
-                await new Promise((resolve) => setTimeout(resolve, 1500));
+                // Prepare auth headers
+                const headers = {
+                    'x-user-id': user.id,
+                    'x-user-role': user.role,
+                };
 
-                const mockProjects: Project[] = [
-                    { id: 'p1', name: 'Web Engagement App', description: 'Interactive dashboard for students.', status: 'In Progress' },
-                    { id: 'p2', name: 'AI Study Assistant', description: 'Bot to help students with questions.', status: 'Pending' },
-                    { id: 'p3', name: 'Campus Maps', description: 'Mobile app for campus navigation.', status: 'Completed' },
-                ];
+                // Fetch all data in parallel
+                const [projectsRes, tasksRes, feedbackRes] = await Promise.all([
+                    fetch('/api/projects', { headers }),
+                    fetch('/api/tasks', { headers }),
+                    fetch('/api/feedback', { headers }),
+                ]);
 
-                const mockTasks: Task[] = [
-                    { id: 't1', title: 'Complete Signup UI', dueDate: '2026-02-01', status: 'Done' },
-                    { id: 't2', title: 'Connect to Database', dueDate: '2026-02-05', status: 'Doing' },
-                    { id: 't3', title: 'Write Unit Tests', dueDate: '2026-02-10', status: 'Todo' },
-                ];
+                // Check for errors
+                if (!projectsRes.ok || !tasksRes.ok || !feedbackRes.ok) {
+                    throw new Error('Failed to fetch dashboard data');
+                }
 
-                const mockFeedback: Feedback[] = [
-                    { id: 'f1', mentorName: 'Sarah Connor', comment: 'Great job on the initial layout! Clean and responsive.', date: '2026-01-18' },
-                    { id: 'f2', mentorName: 'James Bond', comment: 'Make sure to validate all input fields on the signup page.', date: '2026-01-19' },
-                    { id: 'f3', mentorName: 'Alan Turing', comment: 'The state management logic is very efficient. Keep it up.', date: '2026-01-20' },
-                ];
+                // Parse responses
+                const projectsData = await projectsRes.json();
+                const tasksData = await tasksRes.json();
+                const feedbackData = await feedbackRes.json();
 
-                setProjects(mockProjects);
-                setTasks(mockTasks);
-                setFeedback(mockFeedback);
+                // Transform projects data to match component interface
+                const transformedProjects: Project[] = projectsData.map((p: any) => {
+                    // Get all tasks for this project
+                    const projectTasks = tasksData.filter((t: any) => t.projectId === p.id);
+                    const totalTasks = projectTasks.length;
+                    const completedTasks = projectTasks.filter((t: any) => t.status === 'DONE').length;
+
+                    // Determine status based on task completion
+                    let status: 'In Progress' | 'Completed' | 'Not Started';
+                    if (totalTasks === 0) {
+                        status = 'Not Started';
+                    } else if (completedTasks === totalTasks) {
+                        status = 'Completed';
+                    } else {
+                        status = 'In Progress';
+                    }
+
+                    return {
+                        id: p.id,
+                        name: p.title,
+                        description: `Project created on ${new Date(p.createdAt).toLocaleDateString()}`,
+                        status,
+                    };
+                });
+
+                // Transform tasks data to match component interface
+                const transformedTasks: Task[] = tasksData.map((t: any) => ({
+                    id: t.id,
+                    title: t.title,
+                    dueDate: new Date(t.createdAt).toLocaleDateString(),
+                    status: t.status === 'TODO' ? 'Todo' : t.status === 'IN_PROGRESS' ? 'Doing' : 'Done',
+                }));
+
+                // Transform feedback data to match component interface
+                const transformedFeedback: Feedback[] = feedbackData.map((f: any) => ({
+                    id: f.id,
+                    mentorName: 'Peer', // We'd need to fetch user names separately
+                    comment: f.comment || 'No comment provided',
+                    date: new Date(f.createdAt).toLocaleDateString(),
+                }));
+
+                setProjects(transformedProjects);
+                setTasks(transformedTasks);
+                setFeedbacks(transformedFeedback);
                 setAnalytics({
-                    totalProjects: mockProjects.length,
-                    totalTasks: mockTasks.length,
-                    feedbackCount: mockFeedback.length,
-                    completionRate: 75,
+                    totalProjects: transformedProjects.length,
+                    totalTasks: transformedTasks.length,
+                    feedbackCount: transformedFeedback.length,
+                    completionRate: tasksData.filter((t: any) => t.status === 'DONE').length > 0
+                        ? Math.round((tasksData.filter((t: any) => t.status === 'DONE').length / tasksData.length) * 100)
+                        : 0,
                 });
 
             } catch (err) {
+                console.error('Dashboard fetch error:', err);
                 setError('Failed to fetch dashboard data. Please try again.');
             } finally {
                 setIsLoading(false);
@@ -144,7 +211,7 @@ export default function StudentDashboard() {
         };
 
         fetchData();
-    }, []);
+    }, [user]);
 
     if (isLoading) {
         return (
@@ -175,20 +242,34 @@ export default function StudentDashboard() {
             variants={containerVariants}
             className="dashboardContainer"
         >
-            {/* Header / Navbar */}
+            {/* Navbar Section */}
             <motion.nav variants={itemVariants} className="navbar">
-                <div className="logo">
-                    <LayoutDashboard size={24} style={{ marginRight: '0.5rem' }} />
-                    CollabLearn
-                </div>
-                <div className="welcomeSection">
-                    <Link href="/feedback" className="logoutBtn" style={{ marginRight: '1rem', background: 'none', color: '#64748b', border: 'none' }}>
-                        <MessageSquare size={18} style={{ marginRight: '0.4rem' }} />
+                <div className="logo">CollabLearn</div>
+                <div className="navRight">
+                    <div className="searchBar" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <Search size={16} style={{ position: 'absolute', left: '12px', color: '#94a3b8' }} />
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ padding: '0.6rem 1rem 0.6rem 2.5rem', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '0.875rem', width: '200px' }}
+                        />
+                    </div>
+                    <motion.div whileHover={{ scale: 1.1 }} style={{ cursor: 'pointer', color: '#64748b' }}>
+                        <Bell size={20} />
+                    </motion.div>
+                    <Link href="/give-feedback" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#6366f1', color: 'white', borderRadius: '10px', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}>
+                        <MessageSquare size={18} />
+                        Give Feedback
+                    </Link>
+                    <Link href="/feedback" style={{ display: 'flex', alignItems: 'center', color: '#64748b', textDecoration: 'none', marginRight: '1rem', fontSize: '0.875rem' }}>
+                        <MessageSquare size={18} style={{ marginRight: '6px' }} />
                         My Feedback
                     </Link>
-                    <span className="welcomeText">Welcome back, Student!</span>
+                    <span className="welcomeText">Welcome back, {user?.name || 'Student'}!</span>
                     <Link href="/logout" className="logoutBtn">
-                        <LogOut size={18} style={{ marginRight: '0.4rem' }} />
+                        <LogOut size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
                         Logout
                     </Link>
                 </div>
@@ -223,33 +304,35 @@ export default function StudentDashboard() {
 
                 {/* Projects List */}
                 <motion.section variants={itemVariants} className="section">
-                    <div className="sectionTitle">
-                        Your Projects
-                        <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>Recent</span>
-                    </div>
+                    <div className="sectionTitle">Your Projects</div>
                     <div className="list">
                         <AnimatePresence>
-                            {projects.map((project, idx) => (
-                                <motion.div
-                                    key={project.id}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: idx * 0.1 }}
-                                    whileHover={{ x: 5 }}
-                                    className="listItem"
-                                >
-                                    <div className="itemInfo">
-                                        <h4>{project.name}</h4>
-                                        <p>{project.description}</p>
-                                        <span className={`badge ${project.status === 'Completed' ? 'badgeCompleted' : project.status === 'In Progress' ? 'badgeProgress' : 'badgePending'}`}>
-                                            {project.status}
-                                        </span>
-                                    </div>
-                                    <Link href={`/projects/${project.id}`} className="viewBtn">
-                                        View <ChevronRight size={14} />
-                                    </Link>
-                                </motion.div>
-                            ))}
+                            {projects
+                                .filter(project =>
+                                    searchQuery === '' ||
+                                    project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                    project.description.toLowerCase().includes(searchQuery.toLowerCase())
+                                )
+                                .map((project, idx) => (
+                                    <motion.div
+                                        key={project.id}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: idx * 0.1 }}
+                                        className="listItem"
+                                    >
+                                        <div className="itemInfo">
+                                            <h4 style={{ fontSize: '0.95rem' }}>{project.name}</h4>
+                                            <p>{project.description}</p>
+                                            <span className={`badge ${project.status === 'Completed' ? 'badgeCompleted' : project.status === 'In Progress' ? 'badgeProgress' : 'badgePending'}`}>
+                                                {project.status}
+                                            </span>
+                                        </div>
+                                        <Link href={`/projects/${project.id}`} className="viewBtn">
+                                            View
+                                        </Link>
+                                    </motion.div>
+                                ))}
                         </AnimatePresence>
                     </div>
                 </motion.section>
@@ -286,25 +369,27 @@ export default function StudentDashboard() {
                         </div>
                     </motion.section>
 
-                    {/* Feedback Preview */}
+                    {/* Feedback Section */}
                     <motion.section variants={itemVariants} className="section">
                         <div className="sectionTitle">Recent Feedback</div>
-                        <div className="feedbackList">
-                            {feedback.map((item, idx) => (
-                                <motion.div
-                                    key={item.id}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: idx * 0.2 }}
-                                    className="feedbackItem"
-                                >
-                                    <div className="feedbackHeader">
-                                        <span className="mentorName">{item.mentorName}</span>
-                                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{item.date}</span>
-                                    </div>
-                                    <p className="feedbackText">"{item.comment}"</p>
-                                </motion.div>
-                            ))}
+                        <div className="list">
+                            <AnimatePresence>
+                                {feedbacks.map((item: Feedback, idx: number) => (
+                                    <motion.div
+                                        key={item.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.1 }}
+                                        className="feedbackItem"
+                                    >
+                                        <div className="feedbackHeader">
+                                            <span className="mentorName">{item.fromUser}</span>
+                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{item.project}</span>
+                                        </div>
+                                        <p className="feedbackText">"{item.comment}"</p>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
                         </div>
                     </motion.section>
 
