@@ -1,0 +1,12 @@
+﻿
+C:\Users\LAYASREE\Desktop\wi proj\Student-engagement-app-\app\dashboard\mentor\page.tsx
+   15:18  warning  'AnimatePresence' is defined but never used  @typescript-eslint/no-unused-vars
+   23:5   warning  'Bell' is defined but never used             @typescript-eslint/no-unused-vars
+   80:14  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  143:77  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  151:61  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  158:55  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  165:82  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+Γ£û 7 problems (5 errors, 2 warnings)
+

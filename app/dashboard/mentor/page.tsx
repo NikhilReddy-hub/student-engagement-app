@@ -53,6 +53,20 @@ interface Analytics {
     completionRate: number;
 }
 
+interface ProjectData {
+    id: string;
+    title: string;
+    createdAt: string;
+}
+
+interface TaskData {
+    id: string;
+    title: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 // --- ANIMATION VARIANTS ---
 
 const containerVariants = {
@@ -77,13 +91,13 @@ const itemVariants: Variants = {
             type: "spring",
             stiffness: 100,
             damping: 10,
-        } as any,
+        },
     },
 };
 
 // --- MAIN COMPONENT ---
 
-export default function MentorDashboard() {
+export default function MentorDashboard(): React.ReactNode {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
 
@@ -140,7 +154,7 @@ export default function MentorDashboard() {
                 const tasksData = await tasksRes.json();
 
                 // Transform projects data to match component interface
-                const transformedProjects: Project[] = projectsData.map((p: any) => ({
+                const transformedProjects: Project[] = projectsData.map((p: ProjectData) => ({
                     id: p.id,
                     name: p.title,
                     description: `Project created on ${new Date(p.createdAt).toLocaleDateString()}`,
@@ -148,21 +162,21 @@ export default function MentorDashboard() {
                 }));
 
                 // Calculate analytics from real data
-                const completedTasks = tasksData.filter((t: any) => t.status === 'DONE').length;
+                const completedTasks = tasksData.filter((t: TaskData) => t.status === 'DONE').length;
                 const totalTasks = tasksData.length;
                 const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
                 setAnalytics({
                     totalProjects: projectsData.length,
                     totalStudents: 0, // Would need separate API endpoint
-                    activeTasks: tasksData.filter((t: any) => t.status === 'IN_PROGRESS').length,
+                    activeTasks: tasksData.filter((t: TaskData) => t.status === 'IN_PROGRESS').length,
                     completionRate: completionRate
                 });
 
                 setProjects(transformedProjects);
 
                 // Transform recent activity from tasks
-                const recentActivity: Activity[] = tasksData.slice(0, 5).map((t: any) => ({
+                const recentActivity: Activity[] = tasksData.slice(0, 5).map((t: TaskData) => ({
                     id: t.id,
                     studentName: 'Student', // Would need to fetch user names
                     action: `Task: ${t.title} - ${t.status}`,

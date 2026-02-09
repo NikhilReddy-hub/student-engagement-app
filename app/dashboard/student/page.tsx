@@ -2,9 +2,9 @@
 
 /**
  * ============================================
- * STUDENT DASHBOARD (ANIMATED)
- * Tech Stack: Next.js App Router, TypeScript, CSS, Framer Motion
- * Design: Staggered Entrance, Hover Effects, Clean SaaS
+ * *STUDENT DASHBOARD (ANIMATED)
+ * *Tech Stack: Next.js App Router, TypeScript, CSS, Framer Motion
+ * *Design: Staggered Entrance, Hover Effects, Clean SaaS
  * ============================================
  */
 
@@ -45,7 +45,8 @@ interface Task {
 
 interface Feedback {
     id: string;
-    mentorName: string;
+    fromUser: string;
+    project: string;
     comment: string;
     date: string;
 }
@@ -185,7 +186,8 @@ export default function StudentDashboard() {
                 // Transform feedback data to match component interface
                 const transformedFeedback: Feedback[] = feedbackData.map((f: any) => ({
                     id: f.id,
-                    mentorName: 'Peer', // We'd need to fetch user names separately
+                    fromUser: f.fromUser?.name || 'Unknown User',
+                    project: f.project?.title || 'Unknown Project',
                     comment: f.comment || 'No comment provided',
                     date: new Date(f.createdAt).toLocaleDateString(),
                 }));

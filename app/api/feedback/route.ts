@@ -46,6 +46,16 @@ export async function GET(request: Request) {
                     rating: true,
                     comment: true,
                     createdAt: true,
+                    fromUser: {
+                        select: {
+                            name: true,
+                        },
+                    },
+                    project: {
+                        select: {
+                            title: true,
+                        },
+                    },
                 },
                 orderBy: {
                     createdAt: "desc", // Newest feedback first
@@ -75,6 +85,16 @@ export async function GET(request: Request) {
                     rating: true,
                     comment: true,
                     createdAt: true,
+                    fromUser: {
+                        select: {
+                            name: true,
+                        },
+                    },
+                    project: {
+                        select: {
+                            title: true,
+                        },
+                    },
                 },
                 orderBy: {
                     createdAt: "desc", // Newest feedback first
