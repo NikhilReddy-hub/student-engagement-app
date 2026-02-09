@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "prebuild": "rimraf .next generated node_modules/.prisma node_modules/@prisma",
+    "prebuild": "node scripts/debug-vercel.js && rimraf .next generated",
     "start": "next start",
     "lint": "eslint"
   },
