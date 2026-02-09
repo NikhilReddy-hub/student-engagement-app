@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/debug-vercel.js && next build",
     "prebuild": "node scripts/debug-vercel.js && rimraf .next generated",
     "start": "next start",
     "lint": "eslint"
