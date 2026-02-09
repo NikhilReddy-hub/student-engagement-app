@@ -21,7 +21,8 @@ import {
     LogOut,
     Clock,
     Search,
-    Bell
+    Bell,
+    Settings
 } from 'lucide-react';
 import './StudentDashboard.css';
 
@@ -266,6 +267,10 @@ export default function StudentDashboard() {
                     <Link href="/feedback" style={{ display: 'flex', alignItems: 'center', color: '#64748b', textDecoration: 'none', marginRight: '1rem', fontSize: '0.875rem' }}>
                         <MessageSquare size={18} style={{ marginRight: '6px' }} />
                         My Feedback
+                    </Link>
+                    <Link href="/settings" style={{ display: 'flex', alignItems: 'center', color: '#64748b', textDecoration: 'none', marginRight: '1rem', fontSize: '0.875rem' }}>
+                        <Settings size={18} style={{ marginRight: '6px' }} />
+                        Settings
                     </Link>
                     <span className="welcomeText">Welcome back, {user?.name || 'Student'}!</span>
                     <Link href="/logout" className="logoutBtn">
