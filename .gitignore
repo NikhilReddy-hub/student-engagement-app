@@ -33,11 +33,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# database
-*.db
-*.db-journal
-/prisma/*.db
-/prisma/*.db-journal
+
 
 # IDE
 .vscode/
@@ -59,11 +55,7 @@ tmp/
 temp/
 *.tmp
 
-/app/generated/prisma
 
-# prisma compiled/generated files
-prisma/seed_dist/
-backend/prisma/seed_dist/
 
 # database
 dev.db
@@ -84,8 +76,7 @@ generate_log.txt
 /scripts/get_test_token.js
 /scripts/get_test_token.ts
 /scripts/repro_project_create.ts
-/scripts/test_prisma_init.ts
-test-prisma.ts
+
 
 # vanilla/prototype folders (not part of main app)
 /mentor-project-vanilla/

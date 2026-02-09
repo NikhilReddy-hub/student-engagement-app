@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * VALIDATION SCHEMAS FOR PRISMA MODELS
+ * VALIDATION SCHEMAS
  * 
  * Since SQLite doesn't support database-level enums, we enforce validation
  * at the application layer using Zod schemas.
