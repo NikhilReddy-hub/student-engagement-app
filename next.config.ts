@@ -5,9 +5,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: false,
   },
-  // Standalone output for optimized Vercel deployment
-  output: 'standalone',
-
+  // Netlify deployment configuration
   serverExternalPackages: ['bcryptjs'],
 };
 
