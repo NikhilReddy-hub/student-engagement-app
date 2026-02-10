@@ -1,13 +1,26 @@
 'use client';
 
 import { motion } from "framer-motion";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useState, FormEvent } from "react";
 import { useAuth, getAuthHeaders } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-export default function CreateProject() {
+const container = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { staggerChildren: 0.15 },
+    },
+};
+
+const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { ease: "easeOut", duration: 0.6 } },
+};
+
+export default function CreateProjectPage() {
     const { user } = useAuth();
     const [title, setTitle] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -45,108 +58,82 @@ export default function CreateProject() {
 
     return (
         <ProtectedRoute allowedRoles={['MENTOR']}>
-            <div className="min-h-screen bg-[#05060f] text-white flex items-center justify-center relative overflow-hidden">
-                {/* Animated Grid Background */}
-                <motion.div
-                    className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 1.5 }}
-                />
+            <div className="relative min-h-screen bg-[#05060f] text-white overflow-hidden font-sans selection:bg-purple-500/30">
+                {/* Grid Background */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:48px_48px]" />
 
-                {/* Glow */}
-                <motion.div
-                    className="absolute w-[500px] h-[500px] bg-purple-600/30 blur-[160px] rounded-full"
-                    initial={{ scale: 0.6, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 1.8, ease: "easeOut" }}
-                />
+                {/* Center Glow */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-[520px] h-[520px] bg-purple-600/20 blur-[180px] rounded-full opacity-80" />
+                </div>
 
-                {/* Back Link - Added for usability to get back to dashboard */}
+                {/* Back */}
                 <div className="absolute top-8 left-8 z-20">
-                    <Link href="/dashboard/mentor" className="text-gray-400 hover:text-white flex items-center gap-2 transition-colors">
-                        <ArrowLeft className="w-5 h-5" />
-                        <span>Back</span>
+                    <Link href="/dashboard/mentor" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors group">
+                        <div className="p-2 rounded-full group-hover:bg-white/5 transition-colors">
+                            <ArrowLeft size={18} />
+                        </div>
+                        <span className="font-medium">Back to Dashboard</span>
                     </Link>
                 </div>
 
-                {/* Card */}
+                {/* Content */}
                 <motion.div
-                    initial={{ opacity: 0, y: 40 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="relative z-10 max-w-xl w-full px-10"
+                    variants={container}
+                    initial="hidden"
+                    animate="show"
+                    className="relative z-10 flex min-h-screen items-center justify-center"
                 >
-                    <motion.span
-                        className="text-xs tracking-widest text-purple-400 font-semibold"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                    >
-                        NEW WORKSPACE
-                    </motion.span>
+                    <div className="w-full max-w-lg px-6">
+                        <motion.span variants={item} className="inline-block text-xs font-bold tracking-[0.2em] text-purple-400 mb-4 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">
+                            NEW WORKSPACE
+                        </motion.span>
 
-                    <motion.h1
-                        className="text-5xl font-bold mt-3"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                    >
-                        Create a Project.
-                    </motion.h1>
+                        <motion.h1 variants={item} className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70">
+                            Create a Project
+                        </motion.h1>
 
-                    <motion.p
-                        className="text-gray-400 mt-4"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.55 }}
-                    >
-                        Start a new collaborative environment for your students.
-                        Track progress, assign tasks, and mentor efficiently.
-                    </motion.p>
+                        <motion.p variants={item} className="mt-4 text-base text-gray-400 leading-relaxed max-w-md">
+                            Start a new collaborative environment for your students. Track progress,
+                            assign tasks, and mentor efficiently.
+                        </motion.p>
 
-                    {error && (
-                        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-                            {error}
-                        </div>
-                    )}
+                        <form onSubmit={handleSubmit}>
+                            <motion.div variants={item} className="mt-10">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-purple-300/80 mb-3 ml-1">
+                                    Project Title
+                                </label>
+                                <input
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    placeholder="e.g. Senior Capstone 2024"
+                                    className="w-full rounded-xl bg-[#0b0d1a]/80 backdrop-blur-sm border border-purple-500/30 px-5 py-4 text-base outline-none transition-all duration-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 placeholder:text-gray-600 hover:border-purple-500/50"
+                                    autoFocus
+                                />
+                            </motion.div>
 
-                    <form onSubmit={handleSubmit}>
-                        <motion.div
-                            className="mt-8"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.7 }}
-                        >
-                            <label className="text-sm text-purple-400">Project Title</label>
-                            <input
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                placeholder="e.g. Senior Capstone 2024"
-                                className="mt-2 w-full rounded-xl bg-[#0b0d1a] border border-purple-500/40 px-4 py-3 outline-none focus:ring-2 focus:ring-purple-600 transition-all placeholder-gray-600"
-                                autoFocus
-                            />
-                        </motion.div>
+                            {error && (
+                                <motion.div variants={item} className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                    {error}
+                                </motion.div>
+                            )}
 
-                        <motion.button
-                            type="submit"
-                            disabled={isLoading || !title}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.97 }}
-                            className="mt-6 w-full rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 py-3 font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        >
-                            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Project'}
-                        </motion.button>
-                    </form>
+                            <motion.button
+                                variants={item}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                disabled={isLoading || !title}
+                                className="mt-8 w-full rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 py-4 text-sm font-semibold shadow-xl shadow-purple-700/20 hover:shadow-purple-700/40 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2"
+                            >
+                                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Project'}
+                            </motion.button>
+                        </form>
 
-                    <motion.p
-                        className="text-center text-xs text-gray-500 mt-6"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.9 }}
-                    >
-                        Press Enter to create
-                    </motion.p>
+                        <motion.p variants={item} className="mt-6 text-center text-xs text-gray-500/70 font-medium">
+                            Press <span className="text-gray-400">Enter</span> to create
+                        </motion.p>
+                    </div>
                 </motion.div>
             </div>
         </ProtectedRoute>
