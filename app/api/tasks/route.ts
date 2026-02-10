@@ -25,12 +25,23 @@ export async function GET(request: Request) {
 
         let tasks;
         if (userRole === Role.MENTOR) {
-            if (!projectId) {
-                return NextResponse.json({ error: "projectId is required" }, { status: 400 });
+            let taskDocs: LeanTask[] = [];
+
+            if (projectId) {
+                // Fetch tasks for specific project
+                taskDocs = await Task.find({ projectId }).sort({ createdAt: -1 }).lean() as unknown as LeanTask[];
+            } else {
+                // Fetch tasks for ALL projects owned by mentor
+                const projects = await Project.find({ mentorId: userId }).select('_id').lean();
+                // @ts-ignore - lean() returns plain obj with _id
+                const projectIds = projects.map(p => p._id);
+
+                // Find tasks in those projects
+                taskDocs = await Task.find({ projectId: { $in: projectIds } }).sort({ createdAt: -1 }).lean() as unknown as LeanTask[];
             }
-            const taskDocs = await Task.find({ projectId }).sort({ createdAt: -1 }).lean() as unknown as LeanTask[];
+
             tasks = taskDocs.map(t => ({
-                id: t._id.toString(),
+                id: (t as any)._id.toString(),
                 title: t.title,
                 status: t.status,
                 projectId: t.projectId.toString(),
