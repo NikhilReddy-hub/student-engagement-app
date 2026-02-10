@@ -112,7 +112,7 @@ export default function CreateProjectPage() {
 
                         <form onSubmit={handleSubmit}>
                             <motion.div variants={item} className="mt-20">
-                                <label className="block text-sm font-semibold uppercase tracking-wider text-purple-300/80 mb-8 ml-1">
+                                <label className="block text-sm font-semibold uppercase tracking-wider text-purple-300/80 mb-12 ml-1">
                                     Project Title
                                 </label>
                                 <input
@@ -139,7 +139,7 @@ export default function CreateProjectPage() {
                                 whileHover={{ scale: 1.01, boxShadow: "0 20px 25px -5px rgba(124, 58, 237, 0.3)" }}
                                 whileTap={{ scale: 0.98 }}
                                 disabled={isLoading || !title}
-                                className="mt-16 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 py-7 text-xl font-bold shadow-xl shadow-purple-700/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-3 tracking-wide"
+                                className="mt-20 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 py-7 text-xl font-bold shadow-xl shadow-purple-700/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-3 tracking-wide"
                             >
                                 {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Create Project'}
                             </motion.button>
