@@ -107,20 +107,12 @@ export default function CreateProjectPage() {
                                 </p>
                             </motion.div>
 
-                            <motion.form variants={itemVariants} onSubmit={handleSubmit} className="relative w-full max-w-lg mx-auto flex flex-col gap-6">
+                            <motion.form variants={itemVariants} onSubmit={handleSubmit} className="relative w-full max-w-2xl mx-auto flex flex-col gap-10">
                                 <div className={`
                                     relative group rounded-2xl bg-slate-900/50 border transition-all duration-300
                                     ${isFocused ? 'border-purple-500/50 shadow-[0_0_40px_-10px_rgba(168,85,247,0.3)]' : 'border-slate-800 hover:border-slate-700'}
                                 `}>
-                                    <div className="px-6 py-4">
-                                        <label
-                                            htmlFor="title"
-                                            className={`block transition-all duration-200 pointer-events-none mb-1
-                                                ${isFocused || title ? 'text-xs text-purple-400' : 'text-sm text-slate-500'}
-                                            `}
-                                        >
-                                            Project Title
-                                        </label>
+                                    <div className="relative">
                                         <input
                                             id="title"
                                             type="text"
@@ -128,11 +120,21 @@ export default function CreateProjectPage() {
                                             onChange={(e) => setTitle(e.target.value)}
                                             onFocus={() => setIsFocused(true)}
                                             onBlur={() => setIsFocused(false)}
-                                            className="w-full bg-transparent text-xl text-white font-medium focus:outline-none placeholder-slate-700"
-                                            placeholder={isFocused ? "e.g. Senior Capstone 2024" : ""}
+                                            className="w-full bg-transparent text-2xl text-white font-medium focus:outline-none placeholder-transparent px-8 py-6 rounded-2xl"
+                                            placeholder="Project Title"
                                             autoComplete="off"
                                             autoFocus
                                         />
+                                        <label
+                                            htmlFor="title"
+                                            className={`absolute left-6 px-2 bg-[#030712] transition-all duration-200 pointer-events-none rounded
+                                                ${isFocused || title
+                                                    ? 'text-sm text-purple-400 -top-3'
+                                                    : 'text-xl text-slate-500 top-6'}
+                                            `}
+                                        >
+                                            Project Title
+                                        </label>
                                     </div>
                                 </div>
 
@@ -141,14 +143,14 @@ export default function CreateProjectPage() {
                                     whileTap={{ scale: 0.98 }}
                                     disabled={isLoading || !title}
                                     type="submit"
-                                    className="w-full h-14 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-lg hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-900/20 flex items-center justify-center gap-2 transition-all duration-200"
+                                    className="w-full h-16 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xl hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-900/20 flex items-center justify-center gap-3 transition-all duration-200"
                                 >
                                     {isLoading ? (
-                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <Loader2 className="w-6 h-6 animate-spin" />
                                     ) : (
                                         <>
                                             Create Project
-                                            <Layout className="w-5 h-5" />
+                                            <Layout className="w-6 h-6" />
                                         </>
                                     )}
                                 </motion.button>
@@ -159,7 +161,7 @@ export default function CreateProjectPage() {
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: -10 }}
-                                            className="absolute -bottom-16 left-0 right-0 text-center"
+                                            className="absolute -bottom-20 left-0 right-0 text-center"
                                         >
                                             <p className="text-red-400 text-sm font-medium bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-full inline-block">
                                                 {error}
