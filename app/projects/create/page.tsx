@@ -85,41 +85,41 @@ export default function CreateProjectPage() {
                     variants={container}
                     initial="hidden"
                     animate="show"
-                    className="relative z-10 flex min-h-screen items-center justify-center"
+                    className="relative z-10 flex min-h-screen items-center justify-center p-12"
                 >
-                    <div className="w-full max-w-2xl px-6">
+                    <div className="w-full max-w-3xl px-8">
                         <motion.span
                             variants={item}
-                            className="inline-block text-xs font-bold tracking-[0.2em] text-purple-400 mb-4 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20"
+                            className="inline-block text-xs font-bold tracking-[0.2em] text-purple-400 mb-10 bg-purple-500/10 px-4 py-2 rounded-full border border-purple-500/20"
                         >
                             NEW WORKSPACE
                         </motion.span>
 
                         <motion.h1
                             variants={item}
-                            className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70"
+                            className="text-5xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70"
                         >
                             Create a Project
                         </motion.h1>
 
                         <motion.p
                             variants={item}
-                            className="mt-4 text-base text-gray-400 leading-relaxed max-w-md"
+                            className="mt-10 text-lg text-gray-400 leading-relaxed max-w-2xl"
                         >
                             Start a new collaborative environment for your students. Track progress,
                             assign tasks, and mentor efficiently.
                         </motion.p>
 
                         <form onSubmit={handleSubmit}>
-                            <motion.div variants={item} className="mt-16">
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-purple-300/80 mb-6 ml-1">
+                            <motion.div variants={item} className="mt-20">
+                                <label className="block text-sm font-semibold uppercase tracking-wider text-purple-300/80 mb-8 ml-1">
                                     Project Title
                                 </label>
                                 <input
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="e.g. Senior Capstone 2024"
-                                    className="w-full rounded-2xl bg-[#0b0d1a]/80 backdrop-blur-sm border border-purple-500/30 px-8 py-6 text-2xl outline-none transition-all duration-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 placeholder:text-gray-600 hover:border-purple-500/50"
+                                    className="w-full rounded-2xl bg-[#0b0d1a]/80 backdrop-blur-sm border border-purple-500/30 px-8 py-7 text-2xl outline-none transition-all duration-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 placeholder:text-gray-600 hover:border-purple-500/50 shadow-inner"
                                     autoFocus
                                 />
                             </motion.div>
@@ -127,27 +127,27 @@ export default function CreateProjectPage() {
                             {error && (
                                 <motion.div
                                     variants={item}
-                                    className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm"
+                                    className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 text-sm font-medium"
                                 >
-                                    <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                    <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
                                     {error}
                                 </motion.div>
                             )}
 
                             <motion.button
                                 variants={item}
-                                whileHover={{ scale: 1.02 }}
+                                whileHover={{ scale: 1.01, boxShadow: "0 20px 25px -5px rgba(124, 58, 237, 0.3)" }}
                                 whileTap={{ scale: 0.98 }}
                                 disabled={isLoading || !title}
-                                className="mt-12 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 py-6 text-xl font-semibold shadow-xl shadow-purple-700/20 hover:shadow-purple-700/40 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-3"
+                                className="mt-16 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 py-7 text-xl font-bold shadow-xl shadow-purple-700/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-3 tracking-wide"
                             >
-                                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Project'}
+                                {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Create Project'}
                             </motion.button>
                         </form>
 
                         <motion.p
                             variants={item}
-                            className="mt-6 text-center text-xs text-gray-500/70 font-medium"
+                            className="mt-12 text-center text-sm text-gray-500/70 font-medium"
                         >
                             Press <span className="text-gray-400">Enter</span> to create
                         </motion.p>
