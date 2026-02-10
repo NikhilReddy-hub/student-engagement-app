@@ -288,10 +288,10 @@ export default function MentorDashboard(): React.ReactNode {
                     <h2 className="sectionTitle">
                         <LayoutDashboard size={20} /> Your Projects
                     </h2>
-                    <Link href="/projects/create" className="viewBtn" style={{ background: '#6366f1', color: '#fff', border: 'none', marginLeft: 'auto' }}>
+                    <Link href="/projects/create" className="viewBtn" style={{ background: '#6366f1', color: '#fff', border: 'none', marginLeft: 'auto', marginBottom: '1.5rem' }}>
                         + New Project
                     </Link>
-                    <div className="projectList">
+                    <div className="projectList" style={{ marginTop: '1.5rem' }}>
                         {projects
                             .filter(project =>
                                 project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
