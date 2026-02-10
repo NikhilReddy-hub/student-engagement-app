@@ -19,8 +19,8 @@ export default function Home() {
           router.push('/dashboard/student');
         }
       } else {
-        // Not logged in, redirect to login
-        router.push('/login');
+        // Not logged in, redirect to signup
+        router.push('/signup');
       }
     }
   }, [user, loading, router]);
