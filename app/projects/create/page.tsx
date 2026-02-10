@@ -99,7 +99,7 @@ export default function CreateProjectPage() {
                             variants={item}
                             className="text-5xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70"
                         >
-                            Create a Project
+                            Create a Project ✨
                         </motion.h1>
 
                         <motion.p
