@@ -53,54 +53,74 @@ export default function CreateProjectPage() {
 
     return (
         <ProtectedRoute allowedRoles={['MENTOR']}>
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
-                <div className="max-w-2xl mx-auto pt-12">
-                    <Link href="/dashboard/mentor">
-                        <Button variant="ghost" size="sm" className="mb-6">
+            <div className="min-h-screen w-full bg-slate-950 flex items-center justify-center p-4">
+                <div className="w-full max-w-xl">
+                    <Link href="/dashboard/mentor" className="inline-block mb-8 group">
+                        <div className="flex items-center gap-2 text-slate-400 group-hover:text-white transition-colors">
                             <ArrowLeft className="w-4 h-4" />
-                            Back to Dashboard
-                        </Button>
+                            <span>Back to Dashboard</span>
+                        </div>
                     </Link>
 
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                        <Card>
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
-                                    <FolderPlus className="w-6 h-6 text-white" />
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="relative z-10"
+                    >
+                        <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl">
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                                    <FolderPlus className="w-8 h-8 text-purple-400" />
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-bold text-white">Create New Project</h1>
-                                    <p className="text-slate-400 text-sm">Start a new project for your students</p>
+                                    <h1 className="text-2xl font-bold text-white mb-1">Create New Project</h1>
+                                    <p className="text-slate-400 text-sm">Start a collaborative space for your students</p>
                                 </div>
                             </div>
 
                             {error && (
-                                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg">
+                                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-red-500" />
                                     <p className="text-red-400 text-sm">{error}</p>
                                 </div>
                             )}
 
                             <form onSubmit={handleSubmit} className="space-y-6">
-                                <Input
-                                    label="Project Title"
-                                    placeholder="Enter project name..."
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    required
-                                />
+                                <div className="space-y-2">
+                                    <label htmlFor="title" className="block text-sm font-medium text-slate-300 ml-1">
+                                        Project Name
+                                    </label>
+                                    <input
+                                        id="title"
+                                        type="text"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        placeholder="e.g. Web Development Bootcamp 2024"
+                                        className="w-full px-4 py-3 bg-slate-950/50 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-200"
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
 
-                                <div className="flex gap-3">
-                                    <Button type="submit" variant="primary" size="lg" fullWidth isLoading={isLoading}>
-                                        Create Project
-                                    </Button>
-                                    <Link href="/dashboard/mentor">
-                                        <Button type="button" variant="ghost" size="lg">
+                                <div className="flex items-center gap-4 pt-4">
+                                    <Link href="/dashboard/mentor" className="flex-1">
+                                        <button
+                                            type="button"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white transition-all duration-200 font-medium"
+                                        >
                                             Cancel
-                                        </Button>
+                                        </button>
                                     </Link>
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading}
+                                        className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium hover:from-purple-500 hover:to-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/20 transition-all duration-200"
+                                    >
+                                        {isLoading ? 'Creating...' : 'Create Project'}
+                                    </button>
                                 </div>
                             </form>
-                        </Card>
+                        </div>
                     </motion.div>
                 </div>
             </div>
