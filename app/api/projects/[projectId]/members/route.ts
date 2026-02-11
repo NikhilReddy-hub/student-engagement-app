@@ -40,6 +40,7 @@ export async function GET(
             id: m.userId._id.toString(),
             name: m.userId.name,
             email: m.userId.email,
+            role: m.userId.role,
         }));
 
         return NextResponse.json({ members }, { status: 200 });
