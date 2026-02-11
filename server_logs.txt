@@ -1,0 +1,116 @@
+
+> student-engagement-app@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.1.6
+   - Local:        http://localhost:3000
+   - Network:      http://172.28.112.1:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.1s
+ ○ Compiling /api/tasks ...
+ ✓ Compiled /api/tasks in 955ms (334 modules)
+[DEBUG API] GET /api/tasks | userId: 698aae903d36dd6452f90f15, userRole: MENTOR
+[DEBUG API] Found 0 projects for mentor
+[DEBUG API] Found 0 tasks
+ GET /api/tasks 200 in 8834ms
+[DEBUG API] GET /api/tasks | userId: 698aaed0e0cca214d1dc56fe, userRole: MENTOR
+[DEBUG API] Found 0 projects for mentor
+[DEBUG API] Found 0 tasks
+ GET /api/tasks 200 in 615ms
+[DEBUG API] GET /api/tasks | userId: 698aaf203d36dd6452f90f1e, userRole: MENTOR
+[DEBUG API] Found 1 projects for mentor
+[DEBUG API] Found 0 tasks
+ GET /api/tasks 200 in 620ms
+[DEBUG API] GET /api/tasks | userId: 698ab2236cd8354302fec343, userRole: MENTOR
+[DEBUG API] Found 1 projects for mentor
+[DEBUG API] Found 0 tasks
+ GET /api/tasks 200 in 713ms
+[DEBUG API] GET /api/tasks | userId: 698ac2b728036479e5f4fdb0, userRole: MENTOR
+[DEBUG API] Found 1 projects for mentor
+[DEBUG API] Found 0 tasks
+ GET /api/tasks 200 in 622ms
+[DEBUG API] GET /api/tasks | userId: 698ac33928036479e5f4fdc5, userRole: MENTOR
+[DEBUG API] Found 1 projects for mentor
+[DEBUG API] Found 0 tasks
+ GET /api/tasks 200 in 633ms
+[DEBUG API] GET /api/tasks | userId: 698bf7c9147e9a65881de9a0, userRole: MENTOR
+[DEBUG API] Found 1 projects for mentor
+[DEBUG API] Found 0 tasks
+ GET /api/tasks 200 in 642ms
+[DEBUG API] GET /api/tasks | userId: 698bfb08147e9a65881de9e1, userRole: MENTOR
+[DEBUG API] Found 1 projects for mentor
+[DEBUG API] Found 0 tasks
+ GET /api/tasks 200 in 630ms
+ ✓ Compiled in 196ms (84 modules)
+ ✓ Compiled in 28ms
+ ✓ Compiled /api/tasks in 52ms (84 modules)
+ GET /api/tasks 200 in 759ms
+ GET /api/tasks 200 in 604ms
+ GET /api/tasks 200 in 632ms
+ GET /api/tasks 200 in 703ms
+ GET /api/tasks 200 in 594ms
+ GET /api/tasks 200 in 586ms
+ GET /api/tasks 200 in 635ms
+ GET /api/tasks 200 in 639ms
+ ○ Compiling /dashboard/mentor ...
+ ✓ Compiled /dashboard/mentor in 2.6s (1477 modules)
+ GET /dashboard/mentor 200 in 3200ms
+ ✓ Compiled in 596ms (717 modules)
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /favicon.ico in 509ms (1467 modules)
+Error in projects API: CastError: Cast to ObjectId failed for value "1cb9ac51-26c0-488e-9968-223192b9aa38" (type string) at path "mentorId" for model "Project"
+    at async GET (app\api\projects\route.ts:26:32)
+  24 |
+  25 |         if (userRole === Role.MENTOR) {
+> 26 |             const projectDocs = await Project.find({ mentorId: userId }).sort({ createdAt: -1 }).lean() as unknown as LeanProject[];
+     |                                ^
+  27 |             projects = projectDocs.map((p) => ({
+  28 |                 id: String(p._id),
+  29 |                 title: p.title, {
+  stringValue: '"1cb9ac51-26c0-488e-9968-223192b9aa38"',
+  messageFormat: undefined,
+  kind: 'ObjectId',
+  value: '1cb9ac51-26c0-488e-9968-223192b9aa38',
+  path: 'mentorId',
+  reason: BSONError: input must be a 24 character hex string, 12 byte Uint8Array, or an integer
+      at async GET (app\api\projects\route.ts:26:32)
+    24 |
+    25 |         if (userRole === Role.MENTOR) {
+  > 26 |             const projectDocs = await Project.find({ mentorId: userId }).sort({ createdAt: -1 }).lean() as unknown as LeanProject[];
+       |                                ^
+    27 |             projects = projectDocs.map((p) => ({
+    28 |                 id: String(p._id),
+    29 |                 title: p.title,,
+  valueType: 'string'
+}
+ GET /api/projects 500 in 776ms
+ GET /favicon.ico 200 in 781ms
+Error fetching tasks: CastError: Cast to ObjectId failed for value "1cb9ac51-26c0-488e-9968-223192b9aa38" (type string) at path "mentorId" for model "Project"
+    at async GET (app\api\tasks\route.ts:35:33)
+  33 |             } else {
+  34 |                 // Fetch tasks for ALL projects owned by mentor
+> 35 |                 const projects = await Project.find({ mentorId: userId }).select('_id').lean();
+     |                                 ^
+  36 |                 // @ts-ignore - lean() returns plain obj with _id
+  37 |                 const projectIds = projects.map(p => p._id);
+  38 | {
+  stringValue: '"1cb9ac51-26c0-488e-9968-223192b9aa38"',
+  messageFormat: undefined,
+  kind: 'ObjectId',
+  value: '1cb9ac51-26c0-488e-9968-223192b9aa38',
+  path: 'mentorId',
+  reason: BSONError: input must be a 24 character hex string, 12 byte Uint8Array, or an integer
+      at async GET (app\api\tasks\route.ts:35:33)
+    33 |             } else {
+    34 |                 // Fetch tasks for ALL projects owned by mentor
+  > 35 |                 const projects = await Project.find({ mentorId: userId }).select('_id').lean();
+       |                                 ^
+    36 |                 // @ts-ignore - lean() returns plain obj with _id
+    37 |                 const projectIds = projects.map(p => p._id);
+    38 |,
+  valueType: 'string'
+}
+ GET /api/tasks 500 in 908ms
+Terminate batch job (Y/N)? [?25h

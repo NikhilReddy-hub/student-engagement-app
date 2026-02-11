@@ -37,15 +37,12 @@ export async function GET(
         const memberDocs = await ProjectMember.find({ projectId }).populate('userId').lean() as unknown as (LeanProjectMember & { userId: LeanUser })[];
 
         const members = memberDocs.map(m => ({
-            id: m._id.toString(),
-            userId: m.userId._id.toString(),
+            id: m.userId._id.toString(),
             name: m.userId.name,
             email: m.userId.email,
-            role: m.userId.role,
-            joinedAt: m.joinedAt,
         }));
 
-        return NextResponse.json(members, { status: 200 });
+        return NextResponse.json({ members }, { status: 200 });
     } catch (err) {
         console.error("Error fetching members:", err);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -86,13 +83,13 @@ export async function POST(
         }
 
         const body = await request.json();
-        const { email } = body;
+        const { userId: userIdToAdd } = body;
 
-        if (!email) {
-            return NextResponse.json({ error: "Email is required" }, { status: 400 });
+        if (!userIdToAdd) {
+            return NextResponse.json({ error: "User ID is required" }, { status: 400 });
         }
 
-        const userToAdd = await User.findOne({ email }).lean() as unknown as LeanUser;
+        const userToAdd = await User.findById(userIdToAdd).lean() as unknown as LeanUser;
         if (!userToAdd) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
@@ -112,11 +109,14 @@ export async function POST(
         });
 
         return NextResponse.json({
-            id: newMember._id.toString(),
-            userId: userToAdd._id.toString(),
-            name: userToAdd.name,
+            user: {
+                id: userToAdd._id.toString(),
+                name: userToAdd.name,
+                email: userToAdd.email,
+            },
             message: "Member added successfully",
         }, { status: 201 });
+
 
     } catch (err) {
         console.error("Error adding member:", err);

@@ -9,7 +9,7 @@ import { Task, Project, User, ProjectMember } from "@/lib/models";
 export async function GET(request: Request) {
     try {
         const userId = request.headers.get("x-user-id");
-        const userRole = request.headers.get("x-user-role");
+        const userRole = request.headers.get("x-user-role")?.toUpperCase();
 
         if (!userId) {
             return NextResponse.json(
@@ -41,11 +41,11 @@ export async function GET(request: Request) {
             }
 
             tasks = taskDocs.map(t => ({
-                id: (t as any)._id.toString(),
+                id: String((t as any)._id),
                 title: t.title,
                 status: t.status,
-                projectId: t.projectId.toString(),
-                assignedToId: t.assignedToId ? t.assignedToId.toString() : null,
+                projectId: String(t.projectId),
+                assignedToId: t.assignedToId ? String(t.assignedToId) : null,
                 createdAt: t.createdAt,
                 updatedAt: t.updatedAt,
             }));

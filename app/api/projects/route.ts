@@ -10,7 +10,7 @@ import mongoose from "mongoose";
 export async function GET(request: Request) {
     try {
         const userId = request.headers.get("x-user-id");
-        const userRole = request.headers.get("x-user-role");
+        const userRole = request.headers.get("x-user-role")?.toUpperCase();
 
         if (!userId) {
             return NextResponse.json(
@@ -25,9 +25,9 @@ export async function GET(request: Request) {
         if (userRole === Role.MENTOR) {
             const projectDocs = await Project.find({ mentorId: userId }).sort({ createdAt: -1 }).lean() as unknown as LeanProject[];
             projects = projectDocs.map((p) => ({
-                id: p._id.toString(),
+                id: String(p._id),
                 title: p.title,
-                mentorId: p.mentorId.toString(),
+                mentorId: String(p.mentorId),
                 createdAt: p.createdAt,
                 updatedAt: p.updatedAt,
             }));
